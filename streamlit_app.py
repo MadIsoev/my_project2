@@ -44,3 +44,14 @@ fig2 = px.histogram(
     title='Distribution of Body Mass'
 )
 st.plotly_chart(fig2)
+
+data = {
+    'island': island,
+    'bill_length_mm': bill_length_mm,
+    'bill_depth_mm': bill_depth_mm,
+    'flipper_length_mm': flipper_length_mm,
+    'body_mass_g': body_mass_g,
+    'sex': gender
+}
+input_df = pd.DataFrame(data, index=[0])
+input_penguins = pd.concat([input_df, X_raw], axis=0)
