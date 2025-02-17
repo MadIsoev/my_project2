@@ -2,14 +2,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.title('🎈 My Project') 
+st.title('😁😂 My first website')
 
-st.write('Welcome to my page!')
+st.write('Тут я задеплою модель классификации')
 
 df = pd.read_csv("https://raw.githubusercontent.com/dataprofessor/data/master/penguins_cleaned.csv")
 
 with st.expander('Data'):
-  st.write('X')
+  st.write("X")
   X_raw = df.drop('species', axis=1)
   st.dataframe(X_raw)
 
@@ -18,7 +18,7 @@ with st.expander('Data'):
   st.dataframe(y_raw)
 
 with st.sidebar:
-  st.header("Введите признака:")
+  st.header("Введите признаки: ")
   island = st.selectbox('Island', ('Torgersen', 'Dream', 'Biscoe'))
   bill_length_mm = st.slider('Bill length (mm)', 32.1, 59.6, 44.5)
   bill_depth_mm = st.slider('Bill depth (mm)', 13.1, 21.5, 17.3)
@@ -26,7 +26,8 @@ with st.sidebar:
   body_mass_g = st.slider('Body mass (g)', 32.1, 59.6, 44.5)
   gender = st.selectbox('Gender', ('female', 'male'))
 
-st.subheader("Data Visualization")
+# Plotting some features
+st.subheader('Data Visualization')
 fig = px.scatter(
     df,
     x='bill_length_mm',
@@ -37,10 +38,9 @@ fig = px.scatter(
 st.plotly_chart(fig)
 
 fig2 = px.histogram(
-    df,
-    x='body_mass_g',
-    nbins=30,
-    y='bill_depth_mm',
+    df, 
+    x='body_mass_g', 
+    nbins=30, 
     title='Distribution of Body Mass'
 )
 st.plotly_chart(fig2)
@@ -57,25 +57,64 @@ input_df = pd.DataFrame(data, index=[0])
 input_penguins = pd.concat([input_df, X_raw], axis=0)
 
 with st.expander('Input features'):
-  st.write('Input penguin')
-  st.dataframe(input_df)
-  st.write('**Combined penguins data** (input row + original data)**')
-  st.dataframe(input_penguins)
-encode = ['island','sex']
+    st.write('**Input penguin**')
+    st.dataframe(input_df)
+    st.write('**Combined penguins data** (input row + original data)')
+    st.dataframe(input_penguins)
+encode = ['island', 'sex']
 df_penguins = pd.get_dummies(input_penguins, prefix=encode)
-
-X = df_penguins[:1]
+# Separate the top row (our input) from the rest
+X = df_penguins[1:]
 input_row = df_penguins[:1]
-
-target_mapper = {'Adelie': 0, 'Chinstrap': 1, 'Gentoo': 2,}
+# Encode the target
+target_mapper = {'Adelie': 0, 'Chinstrap': 1, 'Gentoo': 2}
 def target_encode(val):
-  return target_mapper[val]
-
+    return target_mapper[val]
 y = y_raw.apply(target_encode)
 
 with st.expander('Data preparation'):
-  st.write('**Encoded X (input penguin)**')
-  st.dataframe(input_row)
-  st.write('**Encoded y**')
-  st.write(y)
+    st.write('**Encoded X (input penguin)**')
+    st.dataframe(input_row)
+    st.write('**Encoded y**')
+    st.write(y)
 
+from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+
+base_rf = RandomForestClassifier(random_state=42)
+base_rf.fit(X, y)
+prediction = base_rf.predict(input_row)
+prediction_proba = base_rf.predict_proba(input_row)
+df_prediction_proba = pd.DataFrame(prediction_proba, columns=['Adelie', 'Chinstrap', 'Gentoo'])
+
+st.subheader('Predicted Species')
+st.dataframe(
+    df_prediction_proba,
+    column_config={
+        'Adelie': st.column_config.ProgressColumn(
+            'Adelie',
+            format='%f',
+            width='medium',
+            min_value=0,
+            max_value=1
+        ),
+        'Chinstrap': st.column_config.ProgressColumn(
+            'Chinstrap',
+            format='%f',
+            width='medium',
+            min_value=0,
+            max_value=1
+        ),
+        'Gentoo': st.column_config.ProgressColumn(
+            'Gentoo',
+            format='%f',
+            width='medium',
+            min_value=0,
+            max_value=1
+        ),
+    },
+    hide_index=True
+)
+
+penguins_species = np.array(['Adelie', 'Chinstrap', 'Gentoo'])
+st.success(f"Predicted species: **{penguins_species[prediction][0]}**")
